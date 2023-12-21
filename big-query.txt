@@ -1,0 +1,74 @@
+EXPORT DATA OPTIONS(
+  uri='gs://dataproc-staging-us-east1-1077714986221-w3r4k84a/table4/file*.csv',
+  format='CSV',
+  header=true,
+  overwrite=true,
+  field_delimiter=','
+) AS
+
+SELECT
+  *
+FROM (
+  SELECT
+    EXTRACT (date
+    FROM
+      PARSE_TIMESTAMP('%Y%m%d%H%M%S',CAST(date AS string))) AS Date,
+    SourceCommonName,
+    ROUND(CAST(SPLIT(V2Tone, ",") [
+      OFFSET
+        (0)] AS FLOAT64),2) AS Sentiment,
+    (CASE
+        WHEN V2Themes LIKE "%ECON_STOCKMARKET%" THEN "stock_market"
+        WHEN V2Themes LIKE "%EPU_POLICY%" THEN "epu_policy" 
+        WHEN V2Themes LIKE "%WB_1235_CENTRAL_BANKS%" THEN "central_banks"
+        WHEN V2Themes LIKE "%ECON_INFLATION%" THEN "inflation"
+        WHEN v2themes LIKE "%ECON_BANKRUPTCY%" THEN "bankruptcy"
+        WHEN V2THEMES LIKE "%WB_1104_MACROECONOMIC_VULNERABILITY_AND_DEBT%" THEN "Debt_Vulnerability"
+        WHEN V2THEMES LIKE "%WB_2745_JOB_QUALITY_AND_LABOR_MARKET_PERFORMANCE%" THEN "job_quality_&_labor_market_performance"
+        WHEN v2themes LIKE "%POVERTY%" THEN "poverty"
+        WHEN v2themes LIKE "%ECON_DEBT" THEN "econ_debt"
+        WHEN v2themes LIKE "%WB_471_ECONOMIC_GROWTH%" THEN "economic_growth"
+        WHEN v2themes LIKE "%WB_318_FINANCIAL_ARCHITECTURE_AND_BANKING%" THEN "financial_arch_and_banking"
+        WHEN v2themes LIKE "%ECON_OILPRICE%" THEN "oil_price"
+        WHEN v2themes LIKE "%WB_625_HEALTH_ECONOMICS_AND_FINANCE%" THEN "health_economics_finance"
+        WHEN v2themes LIKE "%ECON_FREETRADE%" THEN "econ_free_trade"
+        WHEN v2themes LIKE "%GENERAL_GOVERNMENT" THEN "general_govt"
+        WHEN v2themes LIKE "%EPU_ECONOMY" THEN "epu_economoy"
+        WHEN v2themes LIKE "%PROTEST" THEN "protest"
+        WHEN v2themes LIKE "%TOURISM" THEN "tourism"
+        WHEN v2themes LIKE "%IMMIGRATION" THEN "immigration"
+        WHEN v2themes LIKE "%RECRUITMENT" THEN "recruitment"
+        WHEN v2themes LIKE "%STRIKE" THEN "strike"
+        WHEN v2themes LIKE "%WB_445_FISCAL_POLICY" THEN "fiscal_policy"
+        WHEN v2themes LIKE "%WB_1438_ALCOHOL_AND_SUBSTANCE_ABUSE" THEN "addicts"
+        WHEN v2themes LIKE "%WB_1070_ECONOMIC_GROWTH_POLICY" THEN "economic_growth_policy"
+        WHEN v2themes LIKE "%WB_1072_FISCAL_POLICY_AND_GROWTH" THEN "fiscal_policy_growth"
+        WHEN v2themes LIKE "%ECON_MIDDLECLASS" THEN "econ_middle_class"
+        WHEN v2themes LIKE "%UNGP_JOB_OPPURTUNITIES_EMPLOYMENT" THEN "employment_oppurtunities"
+        WHEN v2themes LIKE "%WB_1650_PUBLIC_EMPLOYMENT_SERVICES" THEN "public_employment_services"
+        WHEN v2themes LIKE "%WB_848_LABOR_AND_EMPLOYMENT_LAWS_AND_REGULATIONS" THEN "labor_employment_laws"
+        WHEN v2themes LIKE "%WB_2895_EMPLOYMENT_RATE" THEN "employment_rate"
+        WHEN v2themes LIKE "%ECON_UNDEREMPLOYMENT" THEN "underemployment"
+        WHEN v2themes LIKE "%WB_2885_YOUTH_EMPLOYMENT" THEN "youth_employment"
+        WHEN v2themes LIKE "%WB_2702_UNDEREMPLOYMENT" THEN "under_employment"
+        WHEN v2themes LIKE "%WB_2055_EMPLOYMENT_AND_WAGE_DATA" THEN "employment_and_wage"
+        WHEN v2themes LIKE "%WB_2703_WAGE_EMPLOYMENT" THEN "wage_employment"
+        WHEN v2themes LIKE "%WB_2694_VULNERABLE_EMPLOYMENT" THEN "vulnerable_employment"
+        WHEN v2themes LIKE "%WB_2747_UNEMPLOYMENT" THEN "unemployment_feature"
+        WHEN v2themes LIKE "%WB_2694_VULNERABLE_EMPLOYMENT" THEN "vulnerable_employment"
+    END
+      ) AS news,
+    v2counts,
+    v2locations
+  FROM
+    `gdelt-bq.gdeltv2.gkg_partitioned`
+  WHERE
+    v2counts LIKE '%#US#%'
+    AND counts LIKE '%#US#%'
+    AND V2Locations LIKE '%#US#%'
+    AND DATE(_PARTITIONTIME) >= "2020-01-01"
+    AND DATE(_PARTITIONTIME) <="2023-12-15"
+    )
+
+WHERE
+  news IS NOT NULL
